@@ -51,7 +51,7 @@ public class Event {
     @JoinColumn(name = "initiator_id", referencedColumnName = "id")
     private User initiator;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id", referencedColumnName = "id")
     private Location location;
 

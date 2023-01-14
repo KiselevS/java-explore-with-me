@@ -1,7 +1,6 @@
 package ru.practicum.user.model;
 
 import lombok.*;
-import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 
@@ -17,11 +16,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Length(max = 32)
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 32)
     private String name;
 
-    @Length(max = 32)
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false, length = 32)
     private String email;
 }

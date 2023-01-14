@@ -1,4 +1,4 @@
-package ru.practicum.excption;
+package ru.practicum.exception;
 
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {

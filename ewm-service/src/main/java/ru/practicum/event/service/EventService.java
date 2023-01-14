@@ -18,9 +18,9 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.QEvent;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.excption.BadRequestException;
-import ru.practicum.excption.ConflictException;
-import ru.practicum.excption.NotFoundException;
+import ru.practicum.exception.BadRequestException;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
@@ -169,8 +169,7 @@ public class EventService {
                 .orElseThrow(() -> new NotFoundException(String.format("Failed to find event with id=%d", eventId)));
 
         if (event.getConfirmedRequests() == event.getParticipantLimit()) {
-            List<Request> requests = requestRepository.findAll().stream()
-                    .filter(request -> request.getStatus() == RequestState.PENDING && request.getEvent() == eventId)
+            List<Request> requests = requestRepository.findRequestsByEventAndStatus(eventId, RequestState.PENDING).stream()
                     .peek(request -> request.setStatus(RequestState.REJECTED))
                     .collect(Collectors.toList());
             requestRepository.saveAll(requests);

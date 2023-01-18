@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.comment.dto.CommentOutDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.model.EventSort;
 import ru.practicum.event.service.EventService;
@@ -45,5 +46,26 @@ public class PublicEventController {
     @GetMapping("/{id}")
     public EventFullDto getEventById(@PathVariable @Positive long id, HttpServletRequest request) {
         return eventService.getEvent(id, request);
+    }
+
+    @GetMapping("/{eventId}/comments")
+    public List<CommentOutDto> getComments(@Positive @PathVariable long eventId,
+                                           @RequestParam(name = "from", required = false, defaultValue = "0") int from,
+                                           @RequestParam(name = "size", required = false, defaultValue = "10") int size) {
+        int page = from / size;
+        return eventService.getComments(eventId, PageRequest.of(page, size));
+    }
+
+    @GetMapping("/comments/{commentId}")
+    public CommentOutDto getCommentById(@Positive @PathVariable long commentId) {
+        return eventService.getCommentById(commentId);
+    }
+
+    @GetMapping("/comments/search")
+    public List<CommentOutDto> searchComments(@RequestParam String text,
+                                              @RequestParam(defaultValue = "0") int from,
+                                              @RequestParam(defaultValue = "10") int size) {
+        int page = from / size;
+        return eventService.searchComments(text, PageRequest.of(page, size));
     }
 }

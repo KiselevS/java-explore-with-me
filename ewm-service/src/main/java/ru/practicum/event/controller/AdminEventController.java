@@ -51,4 +51,9 @@ public class AdminEventController {
     public EventFullDto rejectEvent(@Positive @PathVariable long eventId) {
         return eventService.rejectEvent(eventId);
     }
+
+    @DeleteMapping("/comments/{commentId}")
+    public void removeComment(@Positive @PathVariable long commentId) {
+        eventService.removeComment(commentId);
+    }
 }

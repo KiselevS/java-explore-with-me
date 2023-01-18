@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.comment.dto.CommentInDto;
+import ru.practicum.comment.dto.CommentOutDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventRequest;
@@ -78,4 +80,17 @@ public class PrivateEventController {
         return eventService.rejectRequest(userId, eventId, reqId);
     }
 
+    @PostMapping("/{eventId}/comments")
+    public CommentOutDto addComment(@Positive @PathVariable long userId,
+                                    @Positive @PathVariable long eventId,
+                                    @Valid @RequestBody CommentInDto commentInDto) {
+        return eventService.addComment(commentInDto, userId, eventId);
+    }
+
+    @PatchMapping("/comments/{commentId}")
+    public CommentOutDto updateComment(@Positive @PathVariable long userId,
+                                       @Positive @PathVariable long commentId,
+                                       @Valid @RequestBody CommentInDto commentInDto) {
+        return eventService.updateComment(commentInDto, commentId, userId);
+    }
 }

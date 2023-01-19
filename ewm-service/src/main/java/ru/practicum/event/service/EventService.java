@@ -438,7 +438,7 @@ public class EventService {
             return new ArrayList<>();
         }
 
-        return commentRepository.findByTextLikeIgnoreCaseAndEvent_State(text, EventState.PUBLISHED, pageable)
+        return commentRepository.findByTextContainsIgnoreCaseAndEvent_State(text, EventState.PUBLISHED, pageable)
                 .stream().map(CommentMapper::toCommentOutDto).collect(Collectors.toList());
     }
 }

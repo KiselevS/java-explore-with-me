@@ -8,7 +8,7 @@ import ru.practicum.event.model.EventState;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findByTextLikeIgnoreCaseAndEvent_State(String text, EventState state, Pageable pageable);
+    List<Comment> findByTextContainsIgnoreCaseAndEvent_State(String text, EventState state, Pageable pageable);
 
     List<Comment> findByEvent_Id(Long id, Pageable pageable);
 }

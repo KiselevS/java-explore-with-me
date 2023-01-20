@@ -18,18 +18,18 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(name = "text", nullable = false)
-    String text;
+    private String text;
 
     @ManyToOne
-    Event event;
+    private Event event;
 
     @ManyToOne
-    User author;
+    private User author;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd HH:mm:ss")
     @Column(name = "created", nullable = false)
-    LocalDateTime created;
+    private LocalDateTime created;
 }

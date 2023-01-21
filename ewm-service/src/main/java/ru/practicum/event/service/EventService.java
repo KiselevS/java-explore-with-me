@@ -9,6 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.comment.dto.CommentInDto;
+import ru.practicum.comment.dto.CommentOutDto;
+import ru.practicum.comment.mapper.CommentMapper;
+import ru.practicum.comment.model.Comment;
+import ru.practicum.comment.repository.CommentRepository;
 import ru.practicum.event.dto.AdminUpdateEventRequest;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
@@ -46,18 +51,21 @@ public class EventService {
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
     private final EventClient eventClient;
+    private final CommentRepository commentRepository;
 
     @Autowired
     public EventService(EventRepository eventRepository,
                         CategoryRepository categoryRepository,
                         UserRepository userRepository,
                         RequestRepository requestRepository,
-                        EventClient eventClient) {
+                        EventClient eventClient,
+                        CommentRepository commentRepository) {
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.requestRepository = requestRepository;
         this.eventClient = eventClient;
+        this.commentRepository = commentRepository;
     }
 
 
@@ -352,5 +360,85 @@ public class EventService {
         long views = event.getViews() + 1;
         event.setViews(views);
         return EventMapper.toEventFullDto(event);
+    }
+
+
+    public CommentOutDto addComment(CommentInDto commentInDto, long userId, long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(String.format("Failed to find event with id=%d", eventId)));
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new BadRequestException("Can't comment unpublished event");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("Failed to find user with id=%d", userId)));
+
+        Comment comment = Comment.builder()
+                .text(commentInDto.getText())
+                .author(user)
+                .event(event)
+                .created(LocalDateTime.now())
+                .build();
+
+        comment = commentRepository.save(comment);
+        return CommentMapper.toCommentOutDto(comment);
+    }
+
+    public CommentOutDto updateComment(CommentInDto commentInDto, long commentId, long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException(String.format("Failed to find comment with id=%d", commentId)));
+
+        if (comment.getAuthor().getId() != userId) {
+            throw new BadRequestException("Only your own comment can be changed");
+        }
+
+        if (comment.getCreated().isBefore(LocalDateTime.now().minusDays(1))) {
+            throw new BadRequestException("You can update comment within 24 hours");
+        }
+
+        comment.setText(commentInDto.getText());
+        comment = commentRepository.save(comment);
+        return CommentMapper.toCommentOutDto(comment);
+    }
+
+    public void removeComment(long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    public List<CommentOutDto> getComments(long eventId, Pageable pageable) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(String.format("Failed to find event with id=%d", eventId)));
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new BadRequestException("Can't get comments for unpublished event");
+        }
+
+        return commentRepository.findByEvent_Id(eventId, pageable).stream()
+                .map(CommentMapper::toCommentOutDto).collect(Collectors.toList());
+    }
+
+    public CommentOutDto getCommentById(long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException(String.format("Failed to find comment with id=%d", commentId)));
+
+        Event event = eventRepository.findById(comment.getEvent().getId())
+                .orElseThrow(() -> new NotFoundException("Failed to find event"));
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new BadRequestException("Can't get comment for unpublished event");
+        }
+
+        return CommentMapper.toCommentOutDto(comment);
+    }
+
+    public List<CommentOutDto> searchComments(String text, Pageable pageable) {
+        if (text.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        return commentRepository.findByTextContainsIgnoreCaseAndEvent_State(text, EventState.PUBLISHED, pageable)
+                .stream().map(CommentMapper::toCommentOutDto).collect(Collectors.toList());
     }
 }
